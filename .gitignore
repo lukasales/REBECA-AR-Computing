@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# Datasets
+data/*
+!data/README.md
+
+# Model weights
+models/*
+!models/README.md
+
+# Results temporários
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Segredos
+.env
+*.key
