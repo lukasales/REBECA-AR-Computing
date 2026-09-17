@@ -1,0 +1,95 @@
+{
+  "dataset_id": "Aaryan333/fer2013_train_publicTest_privateTest",
+  "dataset_revision": "da8d1643649c86bfc2cffba5b744b51fdf329212",
+  "split": "publicTest",
+  "model_id": "trpakov/vit-face-expression",
+  "model_revision": "ef0bc6fc34241b6587e7e009e7711357be28c024",
+  "model_to_fer_mapping": {
+    "0": 0,
+    "1": 1,
+    "2": 2,
+    "3": 3,
+    "4": 6,
+    "5": 4,
+    "6": 5
+  },
+  "results": [
+    {
+      "sample_index": 0,
+      "true_fer_index": 0,
+      "true_class": "angry",
+      "raw_model_index": 0,
+      "raw_model_class": "angry",
+      "predicted_fer_index": 0,
+      "predicted_class": "angry",
+      "confidence": 0.8916752338409424,
+      "correct": true
+    },
+    {
+      "sample_index": 1,
+      "true_fer_index": 1,
+      "true_class": "disgust",
+      "raw_model_index": 1,
+      "raw_model_class": "disgust",
+      "predicted_fer_index": 1,
+      "predicted_class": "disgust",
+      "confidence": 0.468757688999176,
+      "correct": true
+    },
+    {
+      "sample_index": 6,
+      "true_fer_index": 2,
+      "true_class": "fear",
+      "raw_model_index": 2,
+      "raw_model_class": "fear",
+      "predicted_fer_index": 2,
+      "predicted_class": "fear",
+      "confidence": 0.9111327528953552,
+      "correct": true
+    },
+    {
+      "sample_index": 4,
+      "true_fer_index": 3,
+      "true_class": "happy",
+      "raw_model_index": 3,
+      "raw_model_class": "happy",
+      "predicted_fer_index": 3,
+      "predicted_class": "happy",
+      "confidence": 0.9956810474395752,
+      "correct": true
+    },
+    {
+      "sample_index": 2,
+      "true_fer_index": 4,
+      "true_class": "sad",
+      "raw_model_index": 0,
+      "raw_model_class": "angry",
+      "predicted_fer_index": 0,
+      "predicted_class": "angry",
+      "confidence": 0.9653794765472412,
+      "correct": false
+    },
+    {
+      "sample_index": 16,
+      "true_fer_index": 5,
+      "true_class": "surprise",
+      "raw_model_index": 6,
+      "raw_model_class": "surprise",
+      "predicted_fer_index": 5,
+      "predicted_class": "surprise",
+      "confidence": 0.983500599861145,
+      "correct": true
+    },
+    {
+      "sample_index": 3,
+      "true_fer_index": 6,
+      "true_class": "neutral",
+      "raw_model_index": 3,
+      "raw_model_class": "happy",
+      "predicted_fer_index": 3,
+      "predicted_class": "happy",
+      "confidence": 0.7468371391296387,
+      "correct": false
+    }
+  ]
+}

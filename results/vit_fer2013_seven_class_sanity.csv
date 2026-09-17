@@ -1,0 +1,8 @@
+sample_index,true_fer_index,true_class,raw_model_index,raw_model_class,predicted_fer_index,predicted_class,confidence,correct
+0,0,angry,0,angry,0,angry,0.8916752338409424,True
+1,1,disgust,1,disgust,1,disgust,0.468757688999176,True
+6,2,fear,2,fear,2,fear,0.9111327528953552,True
+4,3,happy,3,happy,3,happy,0.9956810474395752,True
+2,4,sad,0,angry,0,angry,0.9653794765472412,False
+16,5,surprise,6,surprise,5,surprise,0.983500599861145,True
+3,6,neutral,3,happy,3,happy,0.7468371391296387,False
