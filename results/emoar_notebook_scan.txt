@@ -1,0 +1,889 @@
+
+================================================================================
+NOTEBOOK: conversion\Conversion_Keras_to_TF_Lite.ipynb
+================================================================================
+
+No matching code cells found.
+
+================================================================================
+NOTEBOOK: conversion\Conversion_PyTorch_to_Caffe2.ipynb
+================================================================================
+
+--- CODE CELL 12 | MATCHES: classifier, state_dict, torch.load ---
+
+# Standard ImageNet input - 3 channels, 224x224,
+# values don't matter as we care about network structure.
+# But they can also be real inputs.
+
+
+# A model class instance (class not shown)
+torch_model = torchvision.models.mobilenet_v2(pretrained=False)
+torch_model.classifier[1] = torch.nn.Linear(1280, 7)
+
+#print(model)
+
+# Initialize model with the pretrained weights
+map_location = lambda storage, loc: storage
+if torch.cuda.is_available():
+    map_location = None
+
+# Load the weights from a file (.pth usually)
+state_dict = torch.load(base_path + checkpoint_name, map_location=torch.device('cpu'))
+
+# Load the weights now into a model net architecture defined by our class
+torch_model.load_state_dict(state_dict)
+
+# set the train mode to false since we will only run the forward pass.
+torch_model.train(False)
+
+
+--- CODE CELL 21 | MATCHES: transform ---
+# Some standard imports
+from caffe2.proto import caffe2_pb2
+from caffe2.python import core, net_drawer, net_printer, visualize, workspace, utils
+
+import numpy as np
+import os
+import subprocess
+from PIL import Image
+from matplotlib import pyplot
+from skimage import io, transform
+
+--- CODE CELL 23 | MATCHES: transform ---
+# path to test image
+path_to_Test_input_img = base_path + "testface-happy.jpg"
+path_to_Test_output_img = base_path + "testface_224x224.jpg"
+
+
+# load the image
+img_in = io.imread(path_to_Test_input_img)
+
+# resize the image to dimensions 224x224
+img = transform.resize(img_in, [256, 256])
+
+
+# save this resized image to be used as input to the model
+io.imsave(path_to_Test_output_img, img)
+
+================================================================================
+NOTEBOOK: conversion\Conversion_PyTorch_to_Caffe_with_tool.ipynb
+================================================================================
+
+--- CODE CELL 14 | MATCHES: classifier, state_dict, torch.load ---
+
+# Standard ImageNet input - 3 channels, 224x224,
+# values don't matter as we care about network structure.
+# But they can also be real inputs.
+
+
+# A model class instance (class not shown)
+torch_model = torchvision.models.mobilenet_v2(pretrained=False)
+torch_model.classifier[1] = torch.nn.Linear(1280, 7)
+
+#print(model)
+
+# Initialize model with the pretrained weights
+map_location = lambda storage, loc: storage
+if torch.cuda.is_available():
+    map_location = None
+
+# Load the weights from a file (.pth usually)
+state_dict = torch.load(base_path + checkpoint_name, map_location=torch.device('cpu'))
+
+# Load the weights now into a model net architecture defined by our class
+torch_model.load_state_dict(state_dict)
+
+# set the train mode to false since we will only run the forward pass.
+torch_model.train(False)
+
+
+--- CODE CELL 18 | MATCHES: resnet, vgg, classifier ---
+
+
+layer_dict = {'ConvNdBackward'    : 'Convolution',
+              'ThresholdBackward' : 'ReLU',
+              'MaxPool2dBackward' : 'Pooling',
+              'AvgPool2dBackward' : 'Pooling',
+              'DropoutBackward'   : 'Dropout',
+              'AddmmBackward'     : 'InnerProduct',
+              'BatchNormBackward' : 'BatchNorm',
+              'AddBackward'       : 'Eltwise',
+              'SoftmaxBackward'   : 'Softmax',
+              'ViewBackward'      : 'Reshape'}
+
+layer_id = 0
+def pytorch2caffe(input_var, output_var, protofile, caffemodel):
+    global layer_id
+    net_info = pytorch2prototxt(input_var, output_var)
+    print_prototxt(net_info)
+    save_prototxt(net_info, protofile)
+
+    net = caffe.Net(protofile, caffe.TEST)
+    params = net.params
+
+    layer_id = 1
+    seen = set()
+    def convert_layer(func):
+        if True:
+            global layer_id
+            parent_type = str(type(func).__name__)
+    
+            if hasattr(func, 'next_functions'):
+                for u in func.next_functions:
+                    if u[0] is not None:
+                        child_type = str(type(u[0]).__name__)
+                        child_name = child_type + str(layer_id)
+                        if child_type != 'AccumulateGrad' and (parent_type != 'AddmmBackward' or child_type != 'TransposeBackward'):
+                            if u[0] not in seen:
+                                convert_layer(u[0])
+                                seen.add(u[0])
+                            if child_type != 'ViewBackward':
+                                layer_id = layer_id + 1
+    
+            parent_name = parent_type+str(layer_id)
+            print('converting %s' % parent_name)
+            if parent_type == 'ConvNdBackward':
+                weights = func.next_functions[1][0].variable.data
+                if func.next_functions[2][0]:
+                    biases = func.next_functions[2][0].variable.data
+                else:
+                    biases = None
+                save_conv2caffe(weights, biases, params[parent_name])
+            elif parent_type == 'BatchNormBackward':
+                running_mean = func.running_mean
+                running_var = func.running_var
+                #print('%s running_mean' % parent_name, running_mean)
+                #exit(0)
+                scale_weights = func.next_functions[1][0].variable.data
+                scale_biases = func.next_functions[2][0].variable.data
+                bn_name = parent_name + "_bn"
+                scale_name = parent_name + "_scale"
+                save_bn2caffe(running_mean, running_var, params[bn_name])
+                save_scale2caffe(scale_weights, scale_biases, params[scale_name])
+            elif parent_type == 'AddmmBackward':
+                biases = func.next_functions[0][0].variable.data
+                weights = func.next_functions[2][0].next_functions[0][0].variable.data
+                save_fc2caffe(weights, biases, params[parent_name])
+        
+    convert_layer(output_var.grad_fn)
+    print('save caffemodel to %s' % caffemodel)
+    net.save(caffemodel)
+
+def save_conv2caffe(weights, biases, conv_param):
+    if biases is not None:
+        conv_param[1].data[...] = biases.numpy() 
+    conv_param[0].data[...] = weights.numpy() 
+
+def save_fc2caffe(weights, biases, fc_param):
+    fc_param[1].data[...] = biases.numpy() 
+    fc_param[0].data[...] = weights.numpy() 
+
+def save_bn2caffe(running_mean, running_var, bn_param):
+    bn_param[0].data[...] = running_mean.numpy()
+    bn_param[1].data[...] = running_var.numpy()
+    bn_param[2].data[...] = np.array([1.0])
+
+def save_scale2caffe(weights, biases, scale_param):
+    scale_param[1].data[...] = biases.numpy()
+    scale_param[0].data[...] = weights.numpy()
+
+#def pytorch2prototxt(model, x, var):
+def pytorch2prototxt(input_var, output_var):
+    global layer_id
+    net_info = OrderedDict()
+    props = OrderedDict()
+    props['name'] = 'pytorch'
+    props['input'] = 'data'
+    props['input_dim'] = input_var.size()
+    
+    layers = []
+
+    layer_id = 1
+    seen = set()
+    top_names = dict()
+    def add_layer(func):
+        global layer_id
+        parent_type = str(type(func).__name__)
+        parent_bottoms = []
+
+        if hasattr(func, 'next_functions'):
+            for u in func.next_functions:
+                if u[0] is not None:
+                    child_type = str(type(u[0]).__name__)
+                    child_name = child_type + str(layer_id)
+                    if child_type != 'AccumulateGrad' and (parent_type != 'AddmmBackward' or child_type != 'TransposeBackward'):
+                        if u[0] not in seen:
+                            top_name = add_layer(u[0])
+                            parent_bottoms.append(top_name)
+                            seen.add(u[0])
+                        else:
+                            top_name = top_names[u[0]]
+                            parent_bottoms.append(top_name)
+                        if child_type != 'ViewBackward':
+                            layer_id = layer_id + 1
+    
+        parent_name = parent_type+str(layer_id)
+        layer = OrderedDict()
+        layer['name'] = parent_name
+        layer['type'] = layer_dict[parent_type]
+        parent_top = parent_name
+        if len(parent_bottoms) > 0:
+            layer['bottom'] = parent_bottoms 
+        else:
+            layer['bottom'] = ['data']
+        layer['top'] = parent_top
+        if parent_type == 'ConvNdBackward':
+            weights = func.next_functions[1][0].variable
+            conv_param = OrderedDict()
+            conv_param['num_output'] = weights.size(0)
+            conv_param['pad'] = func.padding[0]
+            conv_param['kernel_size'] = weights.size(2)
+            conv_param['stride'] = func.stride[0]
+            if func.next_functions[2][0] == None:
+                conv_param['bias_term'] = 'false'
+            layer['convolution_param'] = conv_param
+        elif parent_type == 'BatchNormBackward':
+            bn_layer = OrderedDict()
+            bn_layer['name'] = parent_name + "_bn"
+            bn_layer['type'] = 'BatchNorm'
+            bn_layer['bottom'] = parent_bottoms
+            bn_layer['top'] = parent_top
+            batch_norm_param = OrderedDict()
+            batch_norm_param['use_global_stats'] = 'true'
+            bn_layer['batch_norm_param'] = batch_norm_param
+    
+            scale_layer = OrderedDict()
+            scale_layer['name'] = parent_name + "_scale"
+            scale_layer['type'] = 'Scale'
+            scale_layer['bottom'] = parent_top
+            scale_layer['top'] = parent_top
+            scale_param = OrderedDict()
+            scale_param['bias_term'] = 'true'
+            scale_layer['scale_param'] = scale_param
+        elif parent_type == 'ThresholdBackward':
+            parent_top = parent_bottoms[0]
+        elif parent_type == 'SoftmaxBackward':
+            parent_top = parent_bottoms[0]
+        elif parent_type == 'MaxPool2dBackward':
+            pooling_param = OrderedDict()
+            pooling_param['pool'] = 'MAX'
+            pooling_param['kernel_size'] = func.kernel_size[0]
+            pooling_param['stride'] = func.stride[0]
+            pooling_param['pad'] = func.padding[0]
+            layer['pooling_param']  = pooling_param
+        elif parent_type == 'AvgPool2dBackward':
+            pooling_param = OrderedDict()
+            pooling_param['pool'] = 'AVE'
+            pooling_param['kernel_size'] = func.kernel_size[0]
+            pooling_param['stride'] = func.stride[0]
+            layer['pooling_param'] = pooling_param
+        elif parent_type == 'DropoutBackward':
+            parent_top = parent_bottoms[0]
+            dropout_param = OrderedDict()
+            dropout_param['dropout_ratio'] = func.p
+            layer['dropout_param'] = dropout_param
+        elif parent_type == 'AddmmBackward':
+            inner_product_param = OrderedDict()
+            inner_product_param['num_output'] = func.next_functions[0][0].variable.size(0)
+            layer['inner_product_param'] = inner_product_param
+        elif parent_type == 'ViewBackward':
+            parent_top = parent_bottoms[0]
+        elif parent_type == 'AddBackward':
+            eltwise_param = OrderedDict()
+            eltwise_param['operation'] = 'SUM'
+            layer['eltwise_param'] = eltwise_param
+    
+        layer['top'] = parent_top # reset layer['top'] as parent_top may change
+        if parent_type != 'ViewBackward':
+            if parent_type == "BatchNormBackward":
+                layers.append(bn_layer)
+                layers.append(scale_layer)
+            else:
+                layers.append(layer)
+            #layer_id = layer_id + 1
+        top_names[func] = parent_top
+        return parent_top
+    
+    add_layer(output_var.grad_fn)
+    net_info['props'] = props
+    net_info['layers'] = layers
+    return net_info
+
+if __name__ == '__main__':
+    import torchvision
+    from visualize import make_dot
+
+    model_name = 'resnet50'
+
+    if model_name == 'resnet50':
+        m = torchvision.models.resnet50(pretrained=True)
+    elif model_name == 'vgg16':
+        m = torchvision.models.vgg16()
+        m.classifier.add_module('softmax', torch.nn.Softmax())
+    m.eval() # very important here, otherwise batchnorm running_mean, running_var will be incorrect
+    input_var = Variable(torch.rand(1, 3, 224, 224))
+
+    print(m)
+    output_var = m(input_var)
+    fp = open("out.dot", "w")
+    dot = make_dot(output_var)
+    print >> fp, dot
+    fp.close()
+    #exit(0)
+
+    if model_name == 'resnet50':
+        pytorch2caffe(input_var, output_var, 'resnet50-pytorch2caffe.prototxt', 'resnet50-pytorch2caffe.caffemodel')
+    elif model_name == 'vgg16':
+        pytorch2caffe(input_var, output_var, 'vgg16-pytorch2caffe.prototxt', 'vgg16-pytorch2caffe.caffemodel')
+
+================================================================================
+NOTEBOOK: conversion\Conversion_PyTorch_to_Tensorflow.ipynb
+================================================================================
+
+--- CODE CELL 7 | MATCHES: classifier, state_dict, torch.load ---
+
+# Standard ImageNet input - 3 channels, 224x224,
+# values don't matter as we care about network structure.
+# But they can also be real inputs.
+
+# A model class instance (class not shown)
+model_pytorch = torchvision.models.mobilenet_v2(pretrained=False)
+model_pytorch.classifier[1] = torch.nn.Linear(1280, 7)
+
+#print(model)
+
+# Load the weights from a file (.pth usually)
+state_dict = torch.load(base_path + checkpoint_name, map_location=torch.device('cpu'))
+
+# Load the weights now into a model net architecture defined by our class
+model_pytorch.load_state_dict(state_dict)
+
+# Single pass of dummy variable required
+# Create the right input shape (e.g. for an image)
+dummy_input = torch.randn(1, 3, 256, 256)
+dummy_output = model_pytorch(dummy_input)
+dummy_output = torch.softmax(dummy_output, 1)
+print(dummy_output)
+
+# important: explicitly name the input and output nodes! Useful for later 
+torch.onnx.export(model_pytorch, 
+                  dummy_input, 
+                  onnx_export_path,
+                  input_names=['input'], 
+                  output_names=['output'])
+
+--- CODE CELL 18 | MATCHES: fer2013 ---
+
+import numpy as np
+from IPython.display import display
+from PIL import Image
+
+path_to_img = base_path + 'fer2013/PrivateTest/2/PrivateTest_1162474.jpg'
+#path_to_img = base_path + 'fer2013/testface-happy.jpg'
+
+img = Image.open(path_to_img).resize((256, 256))
+
+new_img = np.broadcast_to(img, (1, 3, 256, 256)).copy()
+print(new_img.shape)
+
+display(new_img) # show the image
+
+img_ycbcr = img.convert("YCbCr")
+img_y, img_cb, img_cr = img_ycbcr.split()
+
+
+#test_face = np.asarray(img_y, dtype=np.float32)[np.newaxis, np.newaxis, :, :]
+
+================================================================================
+NOTEBOOK: customCNN\FER_CNN_from_scratch_Berenice.ipynb
+================================================================================
+
+--- CODE CELL 0 | MATCHES: transform ---
+
+import torch
+import torch.functional as F
+import torch.nn as nn
+import torch.optim as optim
+import torchvision
+from torch import nn, optim
+from torch.optim import lr_scheduler
+from torch.autograd import Variable
+from torch.utils.data.sampler import SubsetRandomSampler
+from torchvision import datasets, models, transforms
+from torchvision import datasets, transforms, models
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
+import json
+import numpy as np
+import time
+import datetime
+import copy
+
+import matplotlib.pyplot as plt
+%matplotlib inline
+import os, cv2
+import pandas as pd
+#from pylab import rcParams
+#rcParams['figure.figsize'] = 20, 10
+
+print(torch.__version__)
+
+--- CODE CELL 3 | MATCHES: fer2013 ---
+#! /usr/bin/env python3
+# -*-coding: utf-8-*-
+
+#!pip install mxnet
+
+__author__ = 'Moonkie'
+
+import numpy as np
+import cv2
+import mxnet as mx
+import pandas as pd
+import random
+import os
+
+curdir = os.path.abspath(os.path.dirname(fer))
+
+def gen_record(csvfile,channel):
+    data = pd.read_csv(csvfile,delimiter=',',dtype='a')
+    labels = np.array(data['emotion'],np.float)
+    # print(labels,'\n',data['emotion'])
+        
+    imagebuffer = np.array(data['pixels'])
+    images = np.array([np.fromstring(image,np.uint8,sep=' ') for image in imagebuffer])
+    del imagebuffer
+    num_shape = int(np.sqrt(images.shape[-1]))
+    images.shape = (images.shape[0],num_shape,num_shape)
+    # img=images[0];cv2.imshow('test',img);cv2.waitKey(0);cv2.destroyAllWindow();exit()
+    dirs = set(data['Usage'])
+    subdirs = set(labels)
+    class_dir = {}
+    for dr in dirs:
+        dest = os.path.join(curdir,dr)
+        class_dir[dr] = dest
+        if not os.path.exists(dest):
+            os.mkdir(dest)
+            
+    data = zip(labels,images,data['Usage'])
+    
+    for d in data:
+        destdir = os.path.join(class_dir[d[-1]],str(int(d[0])))
+        if not os.path.exists(destdir):
+            os.mkdir(destdir)
+        img = d[1]
+        filepath = unique_name(destdir,d[-1])
+        print('[^_^] Write image to %s' % filepath)
+        if not filepath:
+            continue
+        sig = cv2.imwrite(filepath,img)
+        if not sig:
+            print('Error')
+            exit(-1)
+
+
+def unique_name(pardir,prefix,suffix='jpg'):
+    filename = '{0}_{1}.{2}'.format(prefix,random.randint(1,10**8),suffix)
+    filepath = os.path.join(pardir,filename)
+    if not os.path.exists(filepath):
+        return filepath
+    unique_name(pardir,prefix,suffix)
+    
+
+
+if __name__ == '__main__':
+    filename = 'fer2013.csv'
+    filename = os.path.join(curdir,filename)
+    gen_record(filename,1)
+    
+    # ##################### test
+    # tmp = unique_name('./Training','Training')
+    # print(tmp)
+
+--- CODE CELL 5 | MATCHES: fer2013 ---
+fer= "./gdrive/My Drive/Colab Notebooks/Fer-dataset/fer2013/fer2013.csv"
+ferr= "./gdrive/My Drive/Colab Notebooks/Fer-dataset"
+
+!ls   '/content/gdrive/My Drive/Colab Notebooks/Fer-dataset/fer2013/'
+
+--- CODE CELL 6 | MATCHES: fer2013, transform, imagefolder, batch_size, normalize ---
+data_dir = "./gdrive/My Drive/Colab Notebooks/Fer-dataset/fer2013"
+train_dir = data_dir + '/Training'
+valid_dir = data_dir + '/PublicTest'
+test_dir = data_dir + '/PrivateTest'
+
+# original img size = 48 x48 px
+# TODO: Define your transforms for the training and validation sets
+data_transforms = {
+    'train': transforms.Compose([
+        transforms.RandomHorizontalFlip(),
+        #transforms.RandomResizedCrop(256),
+        transforms.Resize(256), #320
+        transforms.ToTensor(),
+        transforms.Normalize([0.485,], 
+                             [0.229, ])
+    ]),
+    'valid': transforms.Compose([
+        #transforms.CenterCrop(256),
+        transforms.Resize(256),  
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], 
+                             [0.229, 0.224, 0.225])
+    ]),
+    'test': transforms.Compose([
+        #transforms.CenterCrop(224),
+        transforms.Resize(256),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], 
+                             [0.229, 0.224, 0.225])
+    ])
+    }
+
+# TODO: Load the datasets with ImageFolder
+
+dirs = {'train': train_dir, 
+        'valid': valid_dir,
+        'test': test_dir}
+
+datasets = {x: torchvision.datasets.ImageFolder(dirs[x],   transform=data_transforms[x]) for x in ['train', 'valid', 'test']}
+
+# TODO: Using the image datasets and the trainforms, define the dataloaders
+
+dataloaders = {x: torch.utils.data.DataLoader(datasets[x], batch_size=64, shuffle=True, num_workers=7) 
+               for x in ['train', 'valid','test']}
+
+dataset_sizes = {x: len(datasets[x]) 
+                              for x in ['train', 'valid','test']}
+print(dataset_sizes)
+
+--- CODE CELL 11 | MATCHES: accuracy ---
+def get_time():
+      hour = datetime.datetime.today().hour +2
+      minute = datetime.datetime.today().minute
+      second = datetime.datetime.today().second
+      return hour, minute, second
+    
+    
+def weights_init_normal(m):
+  '''Takes in a module and initializes all linear layers with weight
+     values taken from a normal distribution.'''
+  classname = m.__class__.__name__
+  # for every Linear layer in a model
+  if classname.find('Linear') != -1:
+      n = m.in_features
+      # m.weight.data shoud be taken from a normal distribution
+      m.weight.data.normal_(0, 1/np.sqrt(n))
+      # m.bias.data should be 0
+      m.bias.data.fill_(0)
+      
+      
+# Visualize plot
+def plot_loss_acc(n_epochs, train_losses, valid_losses, valid_accuracies):
+    fig, (ax1, ax2) = plt.subplots(figsize=(14,6), ncols=2)
+    ax1.plot(valid_losses, label='Validation loss')
+    ax1.plot(train_losses, label='Training loss')
+    ax1.legend(frameon=False)
+    ax1.set_xlabel('Epochs')
+    ax1.set_ylabel('Loss')
+    #x_ticks = [x for x in range(0,n_epochs,2)]
+    #plt.xticks(x_ticks)
+    
+    ax2.plot(valid_accuracies, label = 'Validation accuracy')
+    ax2.legend(frameon=False)
+    ax2.set_xlabel('Epochs')
+    
+    plt.tight_layout()
+
+--- CODE CELL 13 | MATCHES: resnet, normalize ---
+import torch.nn as nn
+import torch.nn.functional as F
+
+def weights_init_normal(m):
+    '''Takes in a module and initializes all linear layers with weight
+       values taken from a normal distribution.'''
+    classname = m.__class__.__name__
+    # for every Linear layer in a model
+    if classname.find('Linear') != -1:
+        n = m.in_features
+        # m.weight.data shoud be taken from a normal distribution
+        m.weight.data.normal_(0, 1/np.sqrt(n))
+        # m.bias.data should be 0
+        m.bias.data.fill_(0)
+        
+        
+# normalize each layer:
+class MyBatchNormLayer(nn.Module):
+    def __init__(self, input_number, filter_number, stride=2, kernel_size=3, padding=1):
+        super().__init__()
+        self.conv = nn.Conv2d(input_number, filter_number, kernel_size=kernel_size,
+                             stride=stride, bias=False, padding=1)
+        self.normalized = nn.BatchNorm2d(filter_number)
+    
+    def forward(self,x):
+        x = F.relu(self.conv(x))
+        #print('MyBatchNormLayer x.shape= ', x.shape)
+        return self.normalized(x)
+
+    
+class ResnetLayer(MyBatchNormLayer):
+    def forward(self, x): return x + super().forward(x)
+    
+    
+class MyConvBnNet(nn.Module):
+    def __init__(self, layers, classes_number, dropout=0):
+        super().__init__()
+        # define the first convolutional layer manually
+        self.conv1 = MyBatchNormLayer(3, 64,kernel_size=7, stride=2, padding=1)
+        self.pool1 = nn.MaxPool2d(3,2)
+        
+        self.layers1 = nn.ModuleList([MyBatchNormLayer(layers[i], layers[i+1]) for i in range(len(layers)-1)])
+        self.layers2 = nn.ModuleList([ResnetLayer(layers[i+1], layers[i+1], 1) for i in range(len(layers) - 1)])
+        self.layers3 = nn.ModuleList([ResnetLayer(layers[i+1], layers[i+1], 1) for i in range(len(layers) - 1)])
+        self.layers4 = nn.ModuleList([ResnetLayer(layers[i+1], layers[i+1], 1) for i in range(len(layers) - 1)])
+        self.layers5 = nn.ModuleList([ResnetLayer(layers[i+1], layers[i+1], 1) for i in range(len(layers) - 1)])
+        self.layers6 = nn.ModuleList([ResnetLayer(layers[i+1], layers[i+1], 1) for i in range(len(layers) - 1)])
+        self.layers7 = nn.ModuleList([ResnetLayer(layers[i+1], layers[i+1], 1) for i in range(len(layers) - 1)])
+        self.layers8 = nn.ModuleList([ResnetLayer(layers[i+1], layers[i+1], 1) for i in range(len(layers) - 1)])
+        
+        #self.linear1 = nn.Linear(layers[-1], 512)
+        self.outlayer = nn.Linear(layers[-1], classes_number)
+        self.dropout = nn.Dropout(dropout)
+        
+    def forward(self,x):
+        x = F.relu(self.conv1(x))
+        x = self.pool1(x)
+        for lyr1 ,lyr2, lyr3, lyr4, lyr5, lyr6 in zip(
+            self.layers1, self.layers2, self.layers3, self.layers4, self.layers5, self.layers6): 
+            x = lyr4(lyr3(lyr2(lyr1(x))))
+            x =  lyr6(lyr5(x)) # lyr8(lyr7(lyr6(lyr5(x))))
+        x = F.adaptive_max_pool2d(x,1)
+        #print('MyConvBnNet after adaptive_max_pool2d, x.shape=', x.shape)
+        x = x.view(x.size(0), -1)
+        x = self.dropout(x)
+        #x = self.linear1(x)
+        x = self.outlayer(x)
+        return F.log_softmax(x, dim= -1)
+
+
+# check if CUDA is available
+use_cuda = torch.cuda.is_available()
+print('cuda available: ', use_cuda)
+
+# instantiate the CNN
+#model_scratch = MyConvBnNet([10, 20, 40], 133)
+model_scratch = MyConvBnNet([64, 128, 256, 512, 1024], 7, 0.1)
+print(model_scratch)
+
+model_scratch.apply(weights_init_normal)
+
+# move tensors to GPU if CUDA is available
+if use_cuda:
+    model_scratch.cuda()
+print('model is on cuda: ', next(model_scratch.parameters()).is_cuda)
+
+--- CODE CELL 14 | MATCHES: optimizer, accuracy ---
+
+def train_epoch(model, dataloader, criterion, optimizer, train_on_gpu):
+    # initialize variables to monitor training and validation loss
+    train_loss = 0.0
+    train_accuracy = 0.0
+    correct = 0.0
+    total = 0.0
+    
+    for batch_idx, (data, target) in enumerate(dataloader):
+        # move to GPU
+        if train_on_gpu:
+            data, target = data.cuda(), target.cuda()
+            
+        # clear the gradients of all optimized variables
+        optimizer.zero_grad()
+        
+        ## find the loss and update the model parameters accordingly
+        output = model(data)
+        loss = criterion(output, target)
+        loss.backward()
+        optimizer.step()
+        # get the loss per batch and accumulate
+        train_loss += loss.item()
+        
+        # get the class, highest probability
+        probabilities = torch.exp(output)
+        _, top_class = probabilities.topk(1, dim=1)
+        # The following line is equivalent to the previous (?)
+        #_, top_class = torch.max(probabilities, dim=1)
+        
+        # check if the predicted class is correct
+        equals = top_class == target.view(*top_class.shape)
+        # 
+        train_accuracy += torch.mean(equals.type(torch.FloatTensor))
+
+    return train_loss, train_accuracy
+
+
+def validate_epoch(model, dataloader, criterion, train_on_gpu):
+    valid_loss = 0.0
+    valid_accuracy = 0.0
+    correct = 0.0
+    total = 0.0
+    
+    with torch.no_grad():
+        for batch_idx, (data, target) in enumerate(dataloader):
+            # move to GPU
+            if train_on_gpu:
+                data, target = data.cuda(), target.cuda()
+            ## update the average validation loss
+            output = model(data)
+            loss = criterion(output,target)
+            
+            valid_loss += loss.item()
+
+            ps = torch.exp(output)
+            _ , top_class = ps.topk(1,dim = 1)
+            #_, top_class = torch.max(ps, dim=1)
+            equals = top_class == target.view(*top_class.shape) # shape is (batch size x 1)
+            valid_accuracy += torch.mean(equals.type(torch.FloatTensor))
+
+    return valid_loss, valid_accuracy
+
+--- CODE CELL 15 | MATCHES: state_dict, torch.save, optimizer, accuracy ---
+
+def train(n_epochs, loaders, model, optimizer, criterion, scheduler, use_cuda, save_path):
+    print('Training started at ', get_time())
+    
+    valid_losses = []
+    train_losses = []
+    valid_accuracies = []
+    
+    # initialize tracker for minimum validation loss
+    valid_loss_min = np.Inf 
+    
+    for epoch in range(n_epochs):
+        
+         # initialize variables to monitor training and validation loss
+        training_loss = 0.0
+        training_accuracy = 0.0
+    
+        if scheduler is not None:
+          scheduler.step()
+        
+        ###################
+        # train the model #
+        model.train()
+        training_loss, training_accuracy = train_epoch(model, loaders['train'], criterion, optimizer, use_cuda)
+    
+        
+        ######################    
+        # validate the model #
+        model.eval()
+        validation_loss, validation_accuracy = validate_epoch(model, loaders['valid'], criterion, use_cuda)
+        
+        #if scheduler is not None:
+          #scheduler.step(validation_loss)
+        
+        ###### print training/validation statistics 
+        # calculate the average loss per epoch
+        training_loss = training_loss/len(loaders['train'])
+        train_losses.append(training_loss)
+        
+        training_accuracy = training_accuracy/len(loaders['train'])
+        
+        validation_loss = validation_loss/len(loaders['valid'])
+        valid_losses.append(validation_loss)
+        
+        validation_accuracy = validation_accuracy/len(loaders['valid'])
+        valid_accuracies.append(validation_accuracy)
+        
+        hour, minute, second = get_time()
+        print('Epoch: {} at {}:{}:{} \tTrain. Loss: {:.6f} \tValid. Loss: {:.6f} \t Accur.: {:.10f}'.format(
+                  epoch,
+                  hour, minute, second,
+                  training_loss,
+                  #training_accuracy, 
+                  validation_loss,
+                  validation_accuracy ))
+        
+        ###### TODO: save the model if validation loss has decreased
+        if validation_loss <= valid_loss_min:
+            '''print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(
+                valid_loss_min,
+                validation_loss))'''
+            print('Validation loss decreased by {:.6f}'.format(validation_loss - valid_loss_min))
+            torch.save(model.state_dict(), save_path)
+            valid_loss_min = validation_loss
+            
+            
+    ##### visualize
+    plot_loss_acc(n_epochs, train_losses, valid_losses, valid_accuracies)
+    
+    return model
+
+--- CODE CELL 17 | MATCHES: state_dict, torch.load, optimizer, accuracy ---
+
+epochs = 40
+
+### select loss function
+criterion_scratch = nn.NLLLoss()
+
+lr= 1e-4
+#optimizer_scratch = optim.SGD(model_scratch.parameters(), lr=0.001, momentum=0.9)
+optimizer_scratch = optim.Adam(model_scratch.parameters(), lr=lr)
+
+######### change the position of optim.step() in the train section
+gamma = 0.25
+#scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer_scratch, patience = 3, factor=0.1)
+scheduler_scratch = optim.lr_scheduler.MultiStepLR(optimizer_scratch, [10, 18, 26, 32, 36], gamma)
+stepsize = '10_18_26_32_36'
+
+# create model name
+save_path = './gdrive/My Drive/Colab Notebooks/Fer-dataset/'
+modelname = '{}cnn-{}-lr{}gamma{}-{}{}-epo{}.pt'.format(save_path, 'Adam', lr, gamma, 'Multi_', stepsize, epochs)
+
+
+######################################################
+############ start the training the model#############
+######################################################
+
+print(modelname)
+
+#def train(n_epochs, loaders, model, optimizer, criterion, scheduler, use_cuda, save_path):
+model_scratch = train(epochs, dataloaders, model_scratch, 
+                      optimizer_scratch, criterion_scratch, scheduler_scratch,
+                      use_cuda, modelname)
+
+# load the model that got the best validation accuracy
+model_scratch.load_state_dict(torch.load(modelname))
+
+--- CODE CELL 19 | MATCHES: accuracy ---
+def test(loaders, model, criterion, use_cuda):
+
+    # monitor test loss and accuracy
+    test_loss = 0.
+    correct = 0.
+    total = 0.
+    
+    print('test started at ', get_time())
+    model.eval()
+    for batch_idx, (data, target) in enumerate(loaders['test']):
+        # move to GPU
+        if use_cuda:
+            data, target = data.cuda(), target.cuda()
+        # forward pass: compute predicted outputs by passing inputs to the model
+        output = model(data)
+        # calculate the loss
+        loss = criterion(output, target)
+        # update average test loss 
+        test_loss = test_loss + ((1 / (batch_idx + 1)) * (loss.data - test_loss))
+        # convert output probabilities to predicted class
+        pred = output.data.max(1, keepdim=True)[1]
+        # compare predictions to true label
+        correct += np.sum(np.squeeze(pred.eq(target.data.view_as(pred))).cpu().numpy())
+        total += data.size(0)
+            
+    print('test finished at ', get_time())
+    print('Test Loss: {:.6f}\n'.format(test_loss))
+
+    print('\nTest Accuracy: %2d%% (%2d/%2d)' % (
+        100. * correct / total, correct, total))
