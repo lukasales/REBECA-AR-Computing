@@ -1,0 +1,149 @@
+[
+  {
+    "dataset_id": "Aaryan333/fer2013_train_publicTest_privateTest",
+    "revision": "da8d1643649c86bfc2cffba5b744b51fdf329212",
+    "split": "publicTest",
+    "sample_index": 0,
+    "true_index": 0,
+    "true_class": "Angry",
+    "predicted_index": 4,
+    "predicted_class": "Sad",
+    "confidence": 0.5085891485214233,
+    "correct": false,
+    "probabilities": {
+      "Angry": 0.17051440477371216,
+      "Disgust": 0.13748252391815186,
+      "Fear": 0.03150782734155655,
+      "Happy": 0.002063869033008814,
+      "Sad": 0.5085891485214233,
+      "Surprise": 0.0006458180141635239,
+      "Neutral": 0.14919640123844147
+    }
+  },
+  {
+    "dataset_id": "Aaryan333/fer2013_train_publicTest_privateTest",
+    "revision": "da8d1643649c86bfc2cffba5b744b51fdf329212",
+    "split": "publicTest",
+    "sample_index": 1,
+    "true_index": 1,
+    "true_class": "Disgust",
+    "predicted_index": 4,
+    "predicted_class": "Sad",
+    "confidence": 0.4739829897880554,
+    "correct": false,
+    "probabilities": {
+      "Angry": 0.006121605169028044,
+      "Disgust": 0.002450713887810707,
+      "Fear": 0.024320369586348534,
+      "Happy": 0.42921996116638184,
+      "Sad": 0.4739829897880554,
+      "Surprise": 0.019222691655158997,
+      "Neutral": 0.044681694358587265
+    }
+  },
+  {
+    "dataset_id": "Aaryan333/fer2013_train_publicTest_privateTest",
+    "revision": "da8d1643649c86bfc2cffba5b744b51fdf329212",
+    "split": "publicTest",
+    "sample_index": 6,
+    "true_index": 2,
+    "true_class": "Fear",
+    "predicted_index": 4,
+    "predicted_class": "Sad",
+    "confidence": 0.8894141912460327,
+    "correct": false,
+    "probabilities": {
+      "Angry": 0.007993410341441631,
+      "Disgust": 2.713382309593726e-05,
+      "Fear": 0.05372663214802742,
+      "Happy": 0.019919348880648613,
+      "Sad": 0.8894141912460327,
+      "Surprise": 0.0011288458481431007,
+      "Neutral": 0.027790416032075882
+    }
+  },
+  {
+    "dataset_id": "Aaryan333/fer2013_train_publicTest_privateTest",
+    "revision": "da8d1643649c86bfc2cffba5b744b51fdf329212",
+    "split": "publicTest",
+    "sample_index": 4,
+    "true_index": 3,
+    "true_class": "Happy",
+    "predicted_index": 3,
+    "predicted_class": "Happy",
+    "confidence": 0.9909862875938416,
+    "correct": true,
+    "probabilities": {
+      "Angry": 0.002825591480359435,
+      "Disgust": 7.179511385402293e-07,
+      "Fear": 0.003193512326106429,
+      "Happy": 0.9909862875938416,
+      "Sad": 0.000491208047606051,
+      "Surprise": 0.002502140589058399,
+      "Neutral": 6.464398438765784e-07
+    }
+  },
+  {
+    "dataset_id": "Aaryan333/fer2013_train_publicTest_privateTest",
+    "revision": "da8d1643649c86bfc2cffba5b744b51fdf329212",
+    "split": "publicTest",
+    "sample_index": 2,
+    "true_index": 4,
+    "true_class": "Sad",
+    "predicted_index": 0,
+    "predicted_class": "Angry",
+    "confidence": 0.8655185103416443,
+    "correct": false,
+    "probabilities": {
+      "Angry": 0.8655185103416443,
+      "Disgust": 0.057168446481227875,
+      "Fear": 0.03231271356344223,
+      "Happy": 3.435021426412277e-05,
+      "Sad": 0.03873690962791443,
+      "Surprise": 0.0037850160151720047,
+      "Neutral": 0.002444027690216899
+    }
+  },
+  {
+    "dataset_id": "Aaryan333/fer2013_train_publicTest_privateTest",
+    "revision": "da8d1643649c86bfc2cffba5b744b51fdf329212",
+    "split": "publicTest",
+    "sample_index": 16,
+    "true_index": 5,
+    "true_class": "Surprise",
+    "predicted_index": 5,
+    "predicted_class": "Surprise",
+    "confidence": 0.9770082235336304,
+    "correct": true,
+    "probabilities": {
+      "Angry": 4.078250185557408e-06,
+      "Disgust": 4.1038731524167815e-07,
+      "Fear": 0.021698007360100746,
+      "Happy": 0.0009881454752758145,
+      "Sad": 0.00016520766075700521,
+      "Surprise": 0.9770082235336304,
+      "Neutral": 0.0001358712324872613
+    }
+  },
+  {
+    "dataset_id": "Aaryan333/fer2013_train_publicTest_privateTest",
+    "revision": "da8d1643649c86bfc2cffba5b744b51fdf329212",
+    "split": "publicTest",
+    "sample_index": 3,
+    "true_index": 6,
+    "true_class": "Neutral",
+    "predicted_index": 3,
+    "predicted_class": "Happy",
+    "confidence": 0.4837685227394104,
+    "correct": false,
+    "probabilities": {
+      "Angry": 0.03019842319190502,
+      "Disgust": 0.00017158295668195933,
+      "Fear": 0.03593076020479202,
+      "Happy": 0.4837685227394104,
+      "Sad": 0.1345939040184021,
+      "Surprise": 0.0013566515408456326,
+      "Neutral": 0.3139801025390625
+    }
+  }
+]

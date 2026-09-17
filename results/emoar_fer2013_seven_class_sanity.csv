@@ -1,0 +1,8 @@
+sample_index,true_index,true_class,predicted_index,predicted_class,confidence,correct
+0,0,Angry,4,Sad,0.5085891485214233,False
+1,1,Disgust,4,Sad,0.4739829897880554,False
+6,2,Fear,4,Sad,0.8894141912460327,False
+4,3,Happy,3,Happy,0.9909862875938416,True
+2,4,Sad,0,Angry,0.8655185103416443,False
+16,5,Surprise,5,Surprise,0.9770082235336304,True
+3,6,Neutral,3,Happy,0.4837685227394104,False
