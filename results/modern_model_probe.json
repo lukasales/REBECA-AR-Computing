@@ -1,0 +1,63 @@
+{
+  "model_id": "trpakov/vit-face-expression",
+  "revision": "ef0bc6fc34241b6587e7e009e7711357be28c024",
+  "python": "3.11.9",
+  "torch": "2.14.0+cpu",
+  "transformers": "5.17.0",
+  "architectures": [
+    "ViTForImageClassification"
+  ],
+  "num_labels": 7,
+  "id2label": {
+    "0": "angry",
+    "1": "disgust",
+    "2": "fear",
+    "3": "happy",
+    "4": "neutral",
+    "5": "sad",
+    "6": "surprise"
+  },
+  "label2id": {
+    "angry": "0",
+    "disgust": "1",
+    "fear": "2",
+    "happy": "3",
+    "neutral": "4",
+    "sad": "5",
+    "surprise": "6"
+  },
+  "processor": {
+    "size": {
+      "height": 224,
+      "width": 224
+    },
+    "crop_size": null,
+    "image_mean": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "image_std": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "do_resize": true,
+    "do_center_crop": null,
+    "do_normalize": true,
+    "do_rescale": true,
+    "rescale_factor": 0.00392156862745098
+  },
+  "total_parameters": 85804039,
+  "trainable_parameters": 85804039,
+  "dummy_input_shape": [
+    1,
+    3,
+    224,
+    224
+  ],
+  "logits_shape": [
+    1,
+    7
+  ]
+}
