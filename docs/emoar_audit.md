@@ -158,3 +158,67 @@ Before attempting model execution, determine:
 - whether DenseNet121 was the selected final web model;
 - the training/validation procedure associated with this checkpoint.
 
+
+## Checkpoint architecture verification
+
+The checkpoint was safely inspected using:
+
+- Python 3.11.9
+- PyTorch 2.14.0+cpu
+- torchvision 0.29.0+cpu
+- torch.load(..., weights_only=True)
+
+The checkpoint is a direct OrderedDict state_dict containing:
+
+- 727 state entries;
+- 727 tensor entries;
+- 7,044,800 stored tensor values.
+
+### DenseNet121 verification
+
+Candidate architecture:
+
+DenseNet121 with classifier Linear(1024, 7).
+
+Result:
+
+- checkpoint keys: 727
+- model keys: 727
+- matching key names: 727
+- missing keys: 0
+- unexpected keys: 0
+- shape mismatches: 0
+- checkpoint-key overlap: 100%
+- model-key overlap: 100%
+
+Therefore, classifier.pt is structurally compatible with
+DenseNet121 + Linear(1024, 7).
+
+### MobileNetV2 comparison
+
+The MobileNetV2 candidate used in some conversion notebooks showed:
+
+- matching key names: 0
+- checkpoint-key overlap: 0%
+- model-key overlap: 0%
+
+Therefore, the MobileNetV2 conversion notebooks do not describe
+the architecture stored in the web_app/classifier.pt checkpoint.
+
+### Conclusion
+
+For reproducibility purposes, the EmoAR web baseline analyzed in
+this project is defined as:
+
+DenseNet121 -> Linear(1024, 7)
+
+with FER2013 output order:
+
+0 - Angry
+1 - Disgust
+2 - Fear
+3 - Happy
+4 - Sad
+5 - Surprise
+6 - Neutral
+

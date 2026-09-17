@@ -1,0 +1,39 @@
+{
+  "artifact_name": "EmoAR web classifier",
+  "source_repository": "https://github.com/kshntn/EmoAR",
+  "repository_commit": "33d0c6b46775a830744625ee97f736b3255b8060",
+  "checkpoint_relative_path": "web_app/classifier.pt",
+  "checkpoint_sha256": "01DC84D15D836DC8C6552277D7AC0C376086BAA00F1490FD5ACB63CFEF72E5C9",
+  "checkpoint_size_bytes": 28334901,
+  "architecture": "DenseNet121",
+  "classifier": "Linear(1024, 7)",
+  "classes": [
+    "Angry",
+    "Disgust",
+    "Fear",
+    "Happy",
+    "Sad",
+    "Surprise",
+    "Neutral"
+  ],
+  "historical_runtime": {
+    "python": "3.7.1",
+    "torch": "1.0.0",
+    "torchvision": "0.2.1"
+  },
+  "reproduction_runtime": {
+    "python": "3.11.9",
+    "torch": "2.14.0+cpu",
+    "torchvision": "0.29.0+cpu"
+  },
+  "architecture_verification": {
+    "checkpoint_keys": 727,
+    "model_keys": 727,
+    "matching_keys": 727,
+    "missing_keys": 0,
+    "unexpected_keys": 0,
+    "shape_mismatches": 0
+  },
+  "license_status": "No explicit repository license identified during audit",
+  "redistribution_policy": "Checkpoint is referenced externally and is not redistributed by this repository"
+}
