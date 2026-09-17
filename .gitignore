@@ -29,3 +29,6 @@ Thumbs.db
 # Segredos
 .env
 *.key
+
+# External research repositories
+external/
