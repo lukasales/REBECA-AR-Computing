@@ -1,0 +1,85 @@
+{
+  "protocol": {
+    "runs": 5,
+    "images_per_run": 100,
+    "batch_size": 1,
+    "device": "cpu",
+    "warmup_runs": 10,
+    "note": "Model order was fixed: EmoAR before ViT. Absolute latency therefore requires counterbalanced confirmation."
+  },
+  "emoar": {
+    "parameters": 6961031,
+    "tensor_footprint_mb": 26.87424087524414,
+    "preprocessing_mean_ms_across_runs": {
+      "n_runs": 5,
+      "mean": 1.0968938000000001,
+      "median": 1.117437,
+      "std": 0.08418817494577255,
+      "min": 0.953079,
+      "max": 1.172981,
+      "cv_percent": 7.67514365983038
+    },
+    "inference_mean_ms_across_runs": {
+      "n_runs": 5,
+      "mean": 72.9316096,
+      "median": 74.980774,
+      "std": 4.9097148150758505,
+      "min": 65.931967,
+      "max": 77.829857,
+      "cv_percent": 6.731943586606171
+    },
+    "end_to_end_mean_ms_across_runs": {
+      "n_runs": 5,
+      "mean": 72.1451384,
+      "median": 70.081176,
+      "std": 5.33240845276394,
+      "min": 66.453724,
+      "max": 79.419202,
+      "cv_percent": 7.3912235405233355
+    }
+  },
+  "vit": {
+    "parameters": 85804039,
+    "tensor_footprint_mb": 327.31643295288086,
+    "preprocessing_mean_ms_across_runs": {
+      "n_runs": 5,
+      "mean": 1.2512626,
+      "median": 1.283793,
+      "std": 0.0968434681989446,
+      "min": 1.140149,
+      "max": 1.345077,
+      "cv_percent": 7.739659780364618
+    },
+    "inference_mean_ms_across_runs": {
+      "n_runs": 5,
+      "mean": 162.4953288,
+      "median": 164.369108,
+      "std": 8.305048687524275,
+      "min": 152.263066,
+      "max": 172.484479,
+      "cv_percent": 5.110946110793232
+    },
+    "end_to_end_mean_ms_across_runs": {
+      "n_runs": 5,
+      "mean": 164.5902974,
+      "median": 168.014482,
+      "std": 7.992986508965801,
+      "min": 152.707361,
+      "max": 172.959272,
+      "cv_percent": 4.856292646182315
+    }
+  },
+  "relative_cost": {
+    "parameter_ratio": 12.32634059523654,
+    "tensor_memory_ratio": 12.179560139851107,
+    "end_to_end_latency_ratio_across_runs": {
+      "n_runs": 5,
+      "mean": 2.2854232626665203,
+      "median": 2.2979503902595435,
+      "std": 0.0867725905736824,
+      "min": 2.177801685793821,
+      "max": 2.39742669272559,
+      "cv_percent": 3.796784253978424
+    }
+  }
+}
