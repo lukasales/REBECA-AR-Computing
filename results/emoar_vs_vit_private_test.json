@@ -1,0 +1,11 @@
+{
+  "split": "privateTest",
+  "total_samples": 3589,
+  "label_mismatches": 0,
+  "both_correct": 2088,
+  "both_wrong": 715,
+  "emoar_correct_vit_wrong": 299,
+  "emoar_wrong_vit_correct": 487,
+  "discordant_total": 786,
+  "exact_mcnemar_two_sided_p": 2.063326161736752e-11
+}
