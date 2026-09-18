@@ -1,0 +1,138 @@
+{
+  "dataset_id": "Aaryan333/fer2013_train_publicTest_privateTest",
+  "dataset_revision": "da8d1643649c86bfc2cffba5b744b51fdf329212",
+  "split": "privateTest",
+  "model_id": "trpakov/vit-face-expression",
+  "model_revision": "ef0bc6fc34241b6587e7e009e7711357be28c024",
+  "batch_size": 16,
+  "model_to_fer_mapping": {
+    "0": 0,
+    "1": 1,
+    "2": 2,
+    "3": 3,
+    "4": 6,
+    "5": 4,
+    "6": 5
+  },
+  "elapsed_seconds": 378.31303780000053,
+  "images_per_second": 9.486852530568521,
+  "metrics": {
+    "total": 3589,
+    "correct": 2575,
+    "accuracy": 0.7174700473669546,
+    "balanced_accuracy": 0.7100945009387367,
+    "macro_precision": 0.7120932277269445,
+    "macro_recall": 0.7100945009387367,
+    "macro_f1": 0.7106713971070315,
+    "mean_confidence": 0.901041705733257,
+    "per_class": {
+      "angry": {
+        "support": 491,
+        "precision": 0.626,
+        "recall": 0.6374745417515275,
+        "f1": 0.6316851664984864
+      },
+      "disgust": {
+        "support": 55,
+        "precision": 0.75,
+        "recall": 0.7636363636363637,
+        "f1": 0.7567567567567568
+      },
+      "fear": {
+        "support": 528,
+        "precision": 0.6081632653061224,
+        "recall": 0.5643939393939394,
+        "f1": 0.5854616895874263
+      },
+      "happy": {
+        "support": 879,
+        "precision": 0.9073226544622426,
+        "recall": 0.9021615472127418,
+        "f1": 0.9047347404449515
+      },
+      "sad": {
+        "support": 594,
+        "precision": 0.560790273556231,
+        "recall": 0.6212121212121212,
+        "f1": 0.5894568690095846
+      },
+      "surprise": {
+        "support": 416,
+        "precision": 0.8341708542713567,
+        "recall": 0.7980769230769231,
+        "f1": 0.8157248157248157
+      },
+      "neutral": {
+        "support": 626,
+        "precision": 0.6982055464926591,
+        "recall": 0.6837060702875399,
+        "f1": 0.6908797417271993
+      }
+    },
+    "confusion_matrix": [
+      [
+        313,
+        6,
+        49,
+        15,
+        68,
+        6,
+        34
+      ],
+      [
+        7,
+        42,
+        3,
+        1,
+        2,
+        0,
+        0
+      ],
+      [
+        60,
+        3,
+        298,
+        8,
+        95,
+        28,
+        36
+      ],
+      [
+        15,
+        1,
+        7,
+        793,
+        23,
+        16,
+        24
+      ],
+      [
+        56,
+        3,
+        59,
+        16,
+        369,
+        6,
+        85
+      ],
+      [
+        15,
+        0,
+        39,
+        17,
+        7,
+        332,
+        6
+      ],
+      [
+        34,
+        1,
+        35,
+        24,
+        94,
+        10,
+        428
+      ]
+    ]
+  }
+}
