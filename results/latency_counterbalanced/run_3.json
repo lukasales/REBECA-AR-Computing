@@ -1,0 +1,40 @@
+{
+  "order": "vit-first",
+  "environment": {
+    "python": "3.11.9",
+    "torch": "2.14.0+cpu",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+    "device": "cpu",
+    "torch_threads": 8
+  },
+  "protocol": {
+    "dataset_id": "Aaryan333/fer2013_train_publicTest_privateTest",
+    "dataset_revision": "da8d1643649c86bfc2cffba5b744b51fdf329212",
+    "split": "publicTest",
+    "images": 100,
+    "warmup_runs": 10,
+    "batch_size": 1
+  },
+  "emoar": {
+    "n": 100,
+    "mean_ms": 66.216303,
+    "median_ms": 64.5482,
+    "std_ms": 7.4378551210078045,
+    "p95_ms": 81.54636500000001,
+    "p99_ms": 88.135574,
+    "min_ms": 54.8205,
+    "max_ms": 88.5884
+  },
+  "vit": {
+    "n": 100,
+    "mean_ms": 155.005608,
+    "median_ms": 151.457,
+    "std_ms": 10.097423429643381,
+    "p95_ms": 176.285075,
+    "p99_ms": 177.172762,
+    "min_ms": 138.4658,
+    "max_ms": 178.1293
+  },
+  "vit_to_emoar_mean_latency_ratio": 2.3408979507659917
+}
