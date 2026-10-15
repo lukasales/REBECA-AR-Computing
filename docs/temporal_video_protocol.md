@@ -1,4 +1,4 @@
-﻿# Temporal Video Evaluation Protocol
+# Temporal Video Evaluation Protocol
 
 ## Objective
 
@@ -112,3 +112,30 @@ Results will be reported per video and in aggregate.
 ## Protocol freeze
 
 This protocol must be committed before final temporal-video results are generated.
+
+## Fixed face crop policy
+
+A fixed square facial crop is used independently for each video.
+
+The face is detected once on the middle reference frame using the OpenCV Haar frontal-face cascade. The resulting square crop is centered on that reference detection and reused for every frame of the corresponding video.
+
+The selected crop scale is 1.7 times the largest dimension of the reference face bounding box.
+
+A full-frame sensitivity audit compared crop scales 1.5, 1.6, 1.7 and 1.8.
+
+Audit results:
+
+- successfully decoded frames: 1,620;
+- frames with an audit face detection: 1,607/1,620 (99.20%);
+- scale 1.5 containment: 1,559/1,607 (97.01%);
+- scale 1.6 containment: 1,597/1,607 (99.38%);
+- scale 1.7 containment: 1,607/1,607 (100%);
+- scale 1.8 containment: 1,607/1,607 (100%).
+
+Scale 1.7 was selected because it was the smallest tested scale achieving complete containment of all faces detected during the audit.
+
+Per-frame face detection is used only for protocol auditing. It is not part of the primary temporal benchmark and is not included in classifier latency.
+
+The benchmark processes every successfully decoded video frame using the fixed crop, including frames where the audit detector did not return a face.
+
+OpenCV CAP_PROP_FRAME_COUNT previously reported 1,627 frames across the selected videos, while sequential decoding yielded 1,620 processable frames. Primary benchmark frame counts therefore use successfully decoded frames.
