@@ -1,0 +1,33 @@
+{
+  "smoke_test": false,
+  "decoded_frames": 1620,
+  "prediction_rows": 3240,
+  "models": {
+    "emoar": {
+      "checkpoint": "external/EmoAR/web_app/classifier.pt"
+    },
+    "vit": {
+      "model_id": "trpakov/vit-face-expression",
+      "revision": "ef0bc6fc34241b6587e7e009e7711357be28c024",
+      "label_map": {
+        "0": "angry",
+        "1": "disgust",
+        "2": "fear",
+        "3": "happy",
+        "4": "neutral",
+        "5": "sad",
+        "6": "surprise"
+      }
+    }
+  },
+  "crop_policy": {
+    "type": "fixed_per_video",
+    "scale": 1.7
+  },
+  "timing_scope": "model-specific preprocessing plus classification; excludes video decoding, fixed crop, BGR-to-RGB conversion and PIL conversion",
+  "execution_order": "alternated between emoar-first and vit-first by decoded frame",
+  "torch_threads": 8,
+  "python": "3.11.9",
+  "opencv": "4.11.0",
+  "torch": "2.14.0+cpu"
+}
