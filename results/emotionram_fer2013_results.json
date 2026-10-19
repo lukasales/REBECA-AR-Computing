@@ -1,0 +1,27 @@
+{
+  "model": "EmotionRAM Faces / EfficientNet-B0",
+  "training_dataset": "AfeW",
+  "evaluation_dataset": "FER2013 privateTest",
+  "evaluation_revision": "da8d1643649c86bfc2cffba5b744b51fdf329212",
+  "n_images": 3589,
+  "parameters": 4017796,
+  "checkpoint_sha256": "47c1423f3e6f50e3750bf7b0eda7db947c9ce0c2637e1766bf2187eddc652b17",
+  "output_classes": {
+    "0": "Anger",
+    "1": "Contempt",
+    "2": "Disgust",
+    "3": "Fear",
+    "4": "Happiness",
+    "5": "Neutral",
+    "6": "Sadness",
+    "7": "Surprise"
+  },
+  "accuracy": 0.5569796600724436,
+  "balanced_accuracy": 0.522034100606262,
+  "macro_f1": 0.5092183814887832,
+  "mean_confidence": 0.6467836446318994,
+  "contempt_predictions": 52,
+  "contempt_fraction": 0.014488715519643355,
+  "evaluation_seconds": 63.542188599996734,
+  "interpretation": "Cross-dataset/off-the-shelf evaluation. EmotionRAM was trained on AfeW and contains an additional Contempt class."
+}

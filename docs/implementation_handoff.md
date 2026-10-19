@@ -115,3 +115,48 @@ Ainda não foi implementado:
 - face detection/tracking live;
 - feedback visual em tempo real;
 - integração RA completa.
+
+## EmotionRAM-faces
+
+Após a solicitação da equipe, o EmotionRAM-faces também foi
+investigado.
+
+Características identificadas:
+
+- arquitetura EfficientNet-B0;
+- treinamento declarado no AfeW;
+- entrada RGB 224x224;
+- normalização ImageNet;
+- 8 classes, incluindo Contempt;
+- 4,017,796 parâmetros;
+- checkpoint original auditado;
+- pipeline de webcam disponível;
+- detecção facial live com MediaPipe.
+
+Foi realizada uma avaliação off-the-shelf no mesmo FER2013
+privateTest de 3.589 imagens.
+
+Resultados:
+
+| Métrica | EmotionRAM |
+|---|---:|
+| Accuracy | 0.5570 |
+| Balanced accuracy | 0.5220 |
+| Macro-F1 | 0.5092 |
+| Mean confidence | 0.6468 |
+| Parameters | 4,017,796 |
+| Contempt predictions | 52 (1.45%) |
+
+Sete das oito classes apresentam correspondência direta com o
+protocolo FER2013. A classe adicional Contempt foi contabilizada
+como previsão incorreta.
+
+Essa avaliação deve ser descrita como cross-dataset/off-the-shelf,
+pois o EmotionRAM foi treinado no AfeW. Portanto, o valor de
+accuracy não deve ser interpretado como uma comparação
+perfeitamente equivalente com EmoAR e ViT.
+
+O EmotionRAM também é particularmente relevante para o protótipo
+futuro porque seu repositório inclui uma implementação de webcam
+com OpenCV, MediaPipe, inferência EfficientNet-B0 e overlay da
+categoria prevista.
