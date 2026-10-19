@@ -1,0 +1,25 @@
+Oi! Finalizei a parte computacional para a Entrega 4.
+
+Além da comparação EmoAR x ViT no FER2013, finalizei também a
+avaliação temporal com 14 vídeos RAVDESS, 1.620 frames e 3.240
+previsões.
+
+Principais resultados:
+- accuracy: 66,51% EmoAR x 71,75% ViT;
+- latência CPU: 70,60 ms x 151,34 ms;
+- ECE: 0,0839 x 0,1836;
+- estabilidade às perturbações: 90,89% x 87,64%;
+- flickering temporal: 7.72% x 7.22%;
+- FPS temporal: 19.81 x 8.56.
+
+Deixei todos os números, limitações e figuras organizados em:
+docs/implementation_handoff.md
+
+Detalhes técnicos completos:
+docs/computational_results_for_paper.md
+
+Repositório:
+https://github.com/lukasales/REBECA-AR-Computing
+
+A implementação atual processa imagens e vídeos gravados frame a
+frame. Webcam/RA ao vivo ainda não foi implementada.

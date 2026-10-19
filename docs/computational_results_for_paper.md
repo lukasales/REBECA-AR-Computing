@@ -1,4 +1,4 @@
-﻿# Computational Results for Paper
+# Computational Results for Paper
 
 Documento técnico de apoio ao paper.
 
@@ -16,7 +16,8 @@ Os principais eixos avaliados são:
 - custo computacional;
 - latência;
 - confiança e calibração;
-- robustez a pequenas perturbações visuais.
+- robustez a pequenas perturbações visuais;
+- estabilidade temporal em vídeo.
 
 ## 2. Modelos
 
@@ -159,6 +160,37 @@ O ViT permaneceu mais acurado, mas apresentou menor estabilidade de rótulo, pri
 
 Este experimento é um proxy controlado de robustez e não uma avaliação de estabilidade temporal em vídeo.
 
+## Avaliação temporal em vídeo
+
+Foi executado um benchmark temporal utilizando 14 vídeos do RAVDESS,
+com 2 atores e 7 categorias compatíveis com os classificadores.
+
+Foram efetivamente decodificados 1.620 frames. Cada frame foi
+processado pelos dois modelos, totalizando 3.240 previsões.
+
+Foi utilizado crop facial fixo por vídeo, com escala 1.7, sem
+temporal smoothing.
+
+| Métrica | EmoAR | ViT |
+|---|---:|---:|
+| Class switches | 124 | 116 |
+| Flickering/change rate | 7.72% | 7.22% |
+| Consecutive agreement | 92.28% | 92.78% |
+| Mean confidence | 0.6771 | 0.8544 |
+| Mean abs. confidence delta | 0.0431 | 0.0489 |
+| P95 abs. confidence delta | 0.1601 | 0.2470 |
+| Mean latency | 50.49 ms | 116.82 ms |
+| Effective classifier FPS | 19.81 | 8.56 |
+
+O ViT apresentou ligeiramente menos flickering agregado, porém
+maior latência e maior variação temporal da confiança.
+
+Os rótulos do RAVDESS são rótulos de clipe e não são utilizados
+como ground truth frame a frame.
+
+A avaliação utiliza vídeos previamente gravados. Ela não constitui
+uma aplicação de webcam ou RA em tempo real.
+
 ## 9. Síntese do trade-off
 
 | Aspecto | EmoAR | ViT |
@@ -181,7 +213,8 @@ O ViT apresenta melhor desempenho classificatório, enquanto o EmoAR apresenta m
 - figures/02_cpu_latency.png;
 - figures/03_reliability_diagram.png;
 - figures/04_accuracy_coverage.png;
-- figures/05_perturbation_stability.png.
+- figures/05_perturbation_stability.png;
+- figures/06_temporal_applicability_tradeoff.png.
 
 ## 11. Resultados e arquivos de apoio
 
@@ -198,15 +231,19 @@ O ViT apresenta melhor desempenho classificatório, enquanto o EmoAR apresenta m
 
 - FER2013 não é específico de crianças;
 - FER2013 não é específico de crianças com TEA;
-- os experimentos atuais utilizam imagens estáticas;
 - não existe validação clínica;
 - classificação de expressão facial não equivale a inferência do estado emocional interno;
 - o benchmark de latência não representa uma aplicação RA completa;
-- a avaliação de perturbações não representa estabilidade temporal real;
+- a avaliação de perturbações é distinta da avaliação temporal em vídeo;
 - o ViT foi fine-tuned em FER2013, portanto o privateTest utilizado aqui não deve ser apresentado como evidência garantida de generalização externa independente.
 
-## 13. Próxima lacuna computacional
+## 13. Estado atual e próxima lacuna computacional
 
-A principal lacuna experimental atual é a ausência de avaliação em sequências de vídeo.
+A avaliação temporal em vídeos previamente gravados foi concluída.
 
-O próximo experimento deverá investigar estabilidade temporal, mudanças de classe entre frames, variação de confiança e latência em fluxo contínuo.
+A implementação atual constitui um benchmark computacional
+reproduzível de aplicabilidade.
+
+Ainda não foi implementado um protótipo live com webcam, detecção
+ou tracking facial em tempo real, feedback visual ou integração
+com uma experiência completa de Realidade Aumentada.
