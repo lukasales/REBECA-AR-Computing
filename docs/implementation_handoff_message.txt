@@ -1,25 +1,29 @@
-Oi! Finalizei a parte computacional para a Entrega 4.
+Oi, Thais! Finalizei e organizei a contribuição computacional da Entrega 4.
 
-Além da comparação EmoAR x ViT no FER2013, finalizei também a
-avaliação temporal com 14 vídeos RAVDESS, 1.620 frames e 3.240
-previsões.
+No FER2013, os resultados principais ficaram:
+- EmoAR: 66,51% de accuracy;
+- ViT: 71,75%;
+- EmotionRAM-faces: 55,70%.
 
-Principais resultados:
-- accuracy: 66,51% EmoAR x 71,75% ViT;
-- latência CPU: 70,60 ms x 151,34 ms;
-- ECE: 0,0839 x 0,1836;
-- estabilidade às perturbações: 90,89% x 87,64%;
-- flickering temporal: 7.72% x 7.22%;
-- FPS temporal: 19.81 x 8.56.
+O EmotionRAM foi incluído na tabela comparativa, mas deixei explícito que a avaliação dele é cross-dataset/off-the-shelf, porque foi treinado no AfeW e possui 8 classes, incluindo Contempt, enquanto o FER2013 usado no nosso protocolo tem 7.
 
-Deixei todos os números, limitações e figuras organizados em:
-docs/implementation_handoff.md
+Também concluímos:
+- comparação de desempenho EmoAR x ViT;
+- custo e latência CPU;
+- calibração;
+- robustez a perturbações;
+- benchmark temporal com 14 vídeos RAVDESS, 1.620 frames e 3.240 previsões;
+- auditoria e avaliação do EmotionRAM;
+- investigação do pipeline live do EmotionRAM.
 
-Detalhes técnicos completos:
-docs/computational_results_for_paper.md
+O EmotionRAM possui pipeline de webcam com OpenCV + MediaPipe + EfficientNet-B0. Consegui preparar as dependências e chegar à etapa de captura, mas a máquina que estou usando agora não forneceu frames de câmera. Vou validar visualmente depois no notebook com câmera; deixei isso marcado como pendência, sem afirmar que o live já foi validado end-to-end.
+
+Organizei todos os resultados, metodologia, limitações e arquivos produzidos no relatório:
+docs/implementation_report_delivery4.md
+
+Também deixei a tabela:
+results/model_comparison_delivery4.md
 
 Repositório:
 https://github.com/lukasales/REBECA-AR-Computing
 
-A implementação atual processa imagens e vídeos gravados frame a
-frame. Webcam/RA ao vivo ainda não foi implementada.

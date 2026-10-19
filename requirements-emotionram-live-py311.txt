@@ -1,0 +1,17 @@
+# Ambiente separado recomendado para testar o pipeline live
+# do EmotionRAM em Python 3.11.
+#
+# O benchmark principal do projeto deve continuar utilizando
+# requirements.txt.
+#
+# O repositório original do EmotionRAM foi criado para versões
+# mais antigas de Python/PyTorch.
+
+numpy==1.26.4
+Pillow==12.3.0
+torch==2.14.0
+torchvision==0.29.0
+timm==0.9.7
+opencv-contrib-python==4.11.0.86
+mediapipe==0.10.21
+
